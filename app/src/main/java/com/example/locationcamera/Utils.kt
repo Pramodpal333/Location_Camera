@@ -212,7 +212,7 @@ class Utils {
         paint.isAntiAlias = true
         paint.isUnderlineText = true
 //       val yo : Bitmap? =   watermark.getResizedBitmap(watermark,watermark.width*20,watermark.height*20)
-        canvas.drawBitmap(watermark, 10f, 2300f, paint)
+        canvas.drawBitmap(watermark, 10f, 2800f, paint)
         return result
     }
 

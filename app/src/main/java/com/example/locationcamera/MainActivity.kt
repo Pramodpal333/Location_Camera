@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -33,6 +34,7 @@ import java.util.concurrent.Executors
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+
 
     val PERMISSION_REQUEST_ACCESS_LOCATION = 100
 
@@ -81,22 +83,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
         //        Initialization
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+
         tvAddressTitle = findViewById(R.id.tvAddressTitle)
         tvFullAddress = findViewById(R.id.tvFullAddress)
         tvLat = findViewById(R.id.tvLat)
         tvLong = findViewById(R.id.tvLong)
         tvDate = findViewById(R.id.tvDate)
         llDisplayAddress = findViewById(R.id.llDisplayAddress)
+        geocoder = Geocoder(this@MainActivity)
 //        llDisplayAddress = findViewById(R.id.llDisplayAddress)
 
         //Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = supportFragmentManager.findFragmentById(R.id.googleMapFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
 
 
-        geocoder = Geocoder(this@MainActivity)
         Log.i("ADDRESS","before getting loc is ${tvFullAddress.text}")
         getCurrentLocation()
 
@@ -173,7 +176,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 //                       new  =  utils.overlay(yo,locationBitmap!!)
 //                       new  =  utils.bitmapOverlayToCenter(yo,locationBitmap!!)
-                     val   newLocation = utils.getResizedBitmap(locationBitmap!!, locationBitmap!!.width*3,locationBitmap!!.height*3)
+                     val   newLocation = utils.getResizedBitmap(locationBitmap!!, locationBitmap!!.width*2,locationBitmap!!.height*2)
 //                        val resizedLocation = utils.getResizedBitmap(newLocation!!,100,50)!!
                         new = utils.mark(yo,newLocation!!)
                         Log.i("NOOOW","yo i s$yo")
@@ -264,6 +267,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 finish()
             }
         }
+
+        if (requestCode == PERMISSION_REQUEST_ACCESS_LOCATION) {
+            when (grantResults[0]) {
+                PackageManager.PERMISSION_GRANTED -> getCurrentLocation()
+                PackageManager.PERMISSION_DENIED -> Toast.makeText(this@MainActivity,"Permission Denied",Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     companion object {
@@ -279,108 +289,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun getCurrentLocation() {
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            requestPermission()
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
         }
 
         val task = fusedLocationProviderClient.lastLocation
         task.addOnSuccessListener { location ->
             if (location != null) {
-
                 mapFragment.getMapAsync(OnMapReadyCallback {
                     var latLng = LatLng(location.latitude, location.longitude)
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 100f))
+
+                    Log.i("LATI", " current funct is $lati & Longi is $longi")
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18f))
 
 
-
-                    lati = latLng.latitude
-                    longi = latLng.longitude
-
-                    addresses = geocoder.getFromLocation(lati, longi, 1)
-                    state = addresses!![0].adminArea
-                    district = addresses!![0].locality
-                    country = addresses!![0].countryName
-                    area =  addresses!![0].getAddressLine(0)
-
-                    val sdf = SimpleDateFormat("dd/M/yyyy")
-                    val currentDate = sdf.format(Date())
-
-
-
-                    tvDate.setText(currentDate)
-                    tvFullAddress.setText(area)
-                    tvAddressTitle.setText("$district, $state, $country")
-                    tvLat.setText("Lat ${lati}")
-                    tvLong.setText("Lat ${longi}")
-
-                    Log.i("ADDRESS","adreess in getLoc fun i s${tvFullAddress.text}")
                     Log.e("getCurrentLocation", latLng.latitude.toString() + "-" + latLng.longitude)
                 })
-
             }
-
-
-
         }
 
-        locationBitmap = utils.createBitmapFromLayout(llDisplayAddress)
 
-
-
-
-
-
-//
-//        fusedLocationProviderClient.lastLocation.addOnCompleteListener(this) { task ->
-//
-//            val location: Location? = task.result
-//            if (location == null) {
-//                Toast.makeText(this, "Failed to access location", Toast.LENGTH_LONG).show()
-//
-//              requestPermission()
-//
-//            } else {
-//
-//
-//
-//                val lat = location.latitude
-//                val long = location.longitude
-//
-//                lati = location.latitude
-//                longi = location.longitude
-//
-//                addresses = geocoder.getFromLocation(lati,longi,1)
-//                Log.i("OLDI","Lati is $lati & Longi is $longi")
-//                Log.i("OLDI","Lat is $lat & long is $long")
-//
-//                if ( lat.toInt() != 0 && long.toInt() != 0){
-//                    addresses = geocoder.getFromLocation(lat.toDouble(), long.toDouble(), 1)
-//                    state = addresses!![0].adminArea
-//                    district = addresses!![0].locality
-//                    country = addresses!![0].countryName
-//                    area =  addresses!![0].getAddressLine(0)
-//
-//                    val current = LocalDateTime.now()
-//                    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-//                    val formatted = current.format(formatter)
-//
-//
-//                tvDate.text = formatted
-//                    tvFullAddress.text = area
-//                    tvAddressTitle.text = "$district, $state, $country"
-//                    tvLat.text = "Lat ${location.latitude}"
-//                    tvLong.text = "Lat ${location.longitude}"
-//                }
-//
-//
-//
-//
-//            }
-//        }
 
 
     }
@@ -397,38 +326,58 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
 
         mMap = googleMap
-        mMap.uiSettings.isMapToolbarEnabled = true
-        mMap.uiSettings.setAllGesturesEnabled(true)
+        mMap.uiSettings.isMapToolbarEnabled = false
+        mMap.uiSettings.setAllGesturesEnabled(false)
         mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
         }
 
         mMap.isMyLocationEnabled = true
 
+     fusedLocationProviderClient.lastLocation.addOnSuccessListener { location->
 
+         if (location != null){
+             mLastLocation = location
+             val currentLatLng = LatLng(location.latitude,location.longitude)
+             Log.i("LATI", " ready is ${currentLatLng.latitude} & Longi is ${currentLatLng.longitude}")
 
+             lati = currentLatLng.latitude
+             longi = currentLatLng.longitude
+
+             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 10f))
+
+             addresses = geocoder.getFromLocation(lati, longi, 1)
+             state = addresses!![0].adminArea
+             district = addresses!![0].locality
+             country = addresses!![0].countryName
+             area =  addresses!![0].getAddressLine(0)
+
+             val sdf = SimpleDateFormat("dd/M/yyyy")
+             val currentDate = sdf.format(Date())
+
+             tvDate.text = currentDate
+             tvFullAddress.text = area
+             tvAddressTitle.text = "$district, $state, $country"
+             tvLat.text = "Lat ${lati}"
+             tvLong.text = "Lat ${longi}"
+
+             locationBitmap = utils.createBitmapFromLayout(llDisplayAddress)
+
+         }
+     }
         val currentLocation = LatLng(lati, longi)
-        Log.i("LATI", "latlong is $lati & Longi is $longi")
+        Log.i("LATI", "Onmap ready is $lati & Longi is $longi")
 
         mMap.addMarker(MarkerOptions().position(currentLocation).visible(true))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 50f))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 10f))
         mMap.moveCamera(CameraUpdateFactory.zoomIn())
         mMap.animateCamera(CameraUpdateFactory.zoomTo(50f), 2000, null)
-
     }
 
-    override fun onLocationChanged(location: Location) {
-        mLastLocation = location
-//Place current location marker
-        val latLng = LatLng(location.latitude, location.longitude)
-        Log.e("onLocationChanged", latLng.latitude.toString() + "-" + latLng.longitude)
 
-//move map camera
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
-        mMap.moveCamera(CameraUpdateFactory.zoomIn())
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(18f))
-    }
+
 
 }
