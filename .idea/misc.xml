@@ -5,7 +5,7 @@
       <map>
         <entry key="..\:/Users/VR PC/AndroidStudioProjects/LocationCamera/app/src/main/res/drawable/circle_btn_bg.xml" value="0.234" />
         <entry key="..\:/Users/VR PC/AndroidStudioProjects/LocationCamera/app/src/main/res/drawable/gps_location_display_bg.xml" value="0.234" />
-        <entry key="..\:/Users/VR PC/AndroidStudioProjects/LocationCamera/app/src/main/res/layout/activity_main.xml" value="0.30416666666666664" />
+        <entry key="..\:/Users/VR PC/AndroidStudioProjects/LocationCamera/app/src/main/res/layout/activity_main.xml" value="0.19318181818181818" />
       </map>
     </option>
   </component>
@@ -14,5 +14,12 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.1" />
+      </ProjectState>
+    </option>
   </component>
 </project>

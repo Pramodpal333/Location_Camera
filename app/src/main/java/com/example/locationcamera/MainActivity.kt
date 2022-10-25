@@ -4,16 +4,24 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.location.LocationManager
+import android.location.LocationListener
+import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.widget.*
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -33,7 +41,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback , LocationListener {
 
 
     val PERMISSION_REQUEST_ACCESS_LOCATION = 100
@@ -171,15 +179,35 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     val savedUri = Uri.fromFile(photoFile)
 
                     runOnUiThread {
-                        val yo: Bitmap = BitmapFactory.decodeFile(photoFile.path)
+                        val image: Bitmap = BitmapFactory.decodeFile(photoFile.path)
+
+
+                        var rotate =0
+                        val exif: ExifInterface? = savedUri.getPath()?.let { ExifInterface(it) }
+                        val rotation = exif!!.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0)
+
+                        rotate = when (rotation) {
+                            ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                            6 -> 90
+                            8 -> -90
+                            else -> 0
+                        }
+
+                     val rotatedImage  = image.rotatee(rotate.toFloat())
+
+                        val height = rotatedImage.height
+                        Log.i("HEIGHT","$height")
+
+
+
 
 
 //                       new  =  utils.overlay(yo,locationBitmap!!)
 //                       new  =  utils.bitmapOverlayToCenter(yo,locationBitmap!!)
-                     val   newLocation = utils.getResizedBitmap(locationBitmap!!, locationBitmap!!.width*2,locationBitmap!!.height*2)
+                     val   newLocation = utils.getResizedBitmap(locationBitmap!!, locationBitmap!!.width*3,locationBitmap!!.height*3)
 //                        val resizedLocation = utils.getResizedBitmap(newLocation!!,100,50)!!
-                        new = utils.mark(yo,newLocation!!)
-                        Log.i("NOOOW","yo i s$yo")
+                        new = utils.mark(rotatedImage!!,newLocation!!,height-800)
+                        Log.i("NOOOW","yo i s$image")
                         Log.i("NOOOW","loco i s$locationBitmap")
                         Log.i("NOOOW","new i s$new")
                         Log.i("ADDRESS","after captured in getLoc fun i s${tvFullAddress.text}")
@@ -358,6 +386,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
              val sdf = SimpleDateFormat("dd/M/yyyy")
              val currentDate = sdf.format(Date())
 
+             if (area.length < 5){
+
+             }
+
              tvDate.text = currentDate
              tvFullAddress.text = area
              tvAddressTitle.text = "$district, $state, $country"
@@ -365,6 +397,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
              tvLong.text = "Lat ${longi}"
 
              locationBitmap = utils.createBitmapFromLayout(llDisplayAddress)
+
+
+             if (locationBitmap!!.width < locationBitmap!!.height){
+
+             }
 
          }
      }
@@ -377,7 +414,45 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.animateCamera(CameraUpdateFactory.zoomTo(50f), 2000, null)
     }
 
+    override fun onLocationChanged(location: Location) {
+        mLastLocation = location
+//Place current location marker
+        val latLng = LatLng(location.latitude, location.longitude)
+        Log.e("onLocationChanged", latLng.latitude.toString() + "-" + latLng.longitude)
+
+//move map camera
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+        mMap.moveCamera(CameraUpdateFactory.zoomIn())
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(18f))
+    }
+
+    fun Bitmap.rotate(degrees: Number ): Bitmap? {
+        return Bitmap.createBitmap(
+            this,
+            0,
+            0,
+            width,
+            height,
+            Matrix().apply { postRotate(degrees.toFloat()) },
+            true
+        )
+    }
+
+    private fun exifToDegrees(exifOrientation: Int): Int {
+        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            return 90
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            return 180
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            return 270
+        }
+        return 0
+    }
 
 
+    fun Bitmap.rotatee(degrees: Float): Bitmap {
+        val matrix = Matrix().apply { postRotate(degrees) }
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+    }
 
 }

@@ -199,7 +199,7 @@ class Utils {
     }
 
 
-     fun mark(src: Bitmap, watermark: Bitmap): Bitmap {
+     fun mark(src: Bitmap, watermark: Bitmap, height : Int): Bitmap {
         val w = src.width
         val h = src.height
 
@@ -212,7 +212,7 @@ class Utils {
         paint.isAntiAlias = true
         paint.isUnderlineText = true
 //       val yo : Bitmap? =   watermark.getResizedBitmap(watermark,watermark.width*20,watermark.height*20)
-        canvas.drawBitmap(watermark, 10f, 2800f, paint)
+        canvas.drawBitmap(watermark, 10f, height.toFloat(), paint)
         return result
     }
 
@@ -250,5 +250,8 @@ class Utils {
         bm.recycle()
         return resizedBitmap
     }
+
+
+
 }
 
